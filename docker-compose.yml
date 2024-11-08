@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  website:
+    build:
+      context: ./website   # Adjust the build context to point to the /website folder
+    ports:
+      - "8080:8080"         # Expose port 8080 for the website
+    depends_on:
+      - elasticsearch       # Ensure Elasticsearch starts before the website
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"         # Expose Elasticsearch on port 9200
