@@ -34,3 +34,102 @@ th.gridjs-th {
 #search-filters input:disabled+label {
     color: #a9aeb1;
 }
+
+  .banner-section {
+    background-image: url('../assets/img/banner.png');
+  }
+
+.usa-sidenav__sublist a:not(.usa-button) {
+    padding-left: 5px;
+  }
+
+  .usa-sidenav a:not(.usa-button) {
+    padding-left: 5px;
+}
+
+.usa-sidenav__sublist .usa-sidenav__sublist a:not(.usa-button) {
+    padding-left: 5px;
+}
+
+.usa-sidenav .expandable-button.toggle {
+    padding-right: 10px;
+}
+
+.usa-sidenav__sublist .usa-checkbox {
+    display: block;
+    width: 100%;
+}
+
+.usa-sidenav__sublist .usa-checkbox__label {
+    display: block;
+    width: auto;
+    word-wrap: break-word;
+}
+
+.objectives-container {
+    position: relative;
+  }
+  
+  .text-truncate {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .text-truncate.expanded {
+    -webkit-line-clamp: unset;
+  }
+  
+  .read-more-btn {
+    color: #005ea2;
+    padding: 0;
+    margin: 0;
+    font-weight: normal;
+    display: none; /* Hidden by default, shown via JS if needed */
+  }
+  
+  .read-more-btn:hover {
+    color: #1a4480;
+    background-color: transparent;
+  }
+
+  input[type="checkbox"]:disabled + label {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  .count {
+    color: #71767a;
+    font-weight: normal;
+  }
+  
+  /* Disabled expand button styles */
+  .usa-checkbox input:disabled ~ .toggle.expandable-button {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  
+  /* Hidden children container for disabled parent */
+  .usa-checkbox input:disabled ~ [id^="children-for-check"] {
+    display: none !important;
+  }
+  
+  /* Disabled checkbox container styles */
+  .usa-checkbox.disabled {
+    pointer-events: none;
+  }
+  
+  .usa-checkbox input:disabled {
+    pointer-events: none;
+  }
+  
+  /* Clear filter button disabled state */
+  .usa-button--disabled {
+    background-color: #e6e6e6;
+    color: #757575;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
