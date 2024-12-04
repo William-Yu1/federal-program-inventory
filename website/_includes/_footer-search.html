@@ -489,13 +489,46 @@
               const agencyCode = code.slice(1).replace("*", "");
               const agencyTitle = mapping[agencyCode];
               if (agencyTitle) {
+                // Add the parent agency title
                 selectedAgencySubAgency.push(agencyTitle);
+
+                // Find and check the parent checkbox
+                const parentCheckbox = document.querySelector(
+                  `input[data-filter-type="agency"][data-agency-title="${agencyTitle}"]`
+                );
+                if (parentCheckbox) {
+                  parentCheckbox.checked = true;
+
+                  // Also check all enabled child checkboxes if it's a parent selection
+                  const childrenId =
+                    parentCheckbox.getAttribute("data-children-id");
+                  if (childrenId && code.endsWith("*")) {
+                    const childrenContainer =
+                      document.getElementById(childrenId);
+                    if (childrenContainer) {
+                      const children = childrenContainer.querySelectorAll(
+                        'input[data-filter-type="sub-agency"]:not(:disabled)'
+                      );
+                      children.forEach((child) => {
+                        child.checked = true;
+                        const subAgencyTitle = child.getAttribute(
+                          "data-subagency-title"
+                        );
+                        if (subAgencyTitle) {
+                          selectedAgencySubAgency.push(
+                            `${agencyTitle} - ${subAgencyTitle}`
+                          );
+                        }
+                      });
+                    }
+                  }
+                }
               }
             }
           });
         }
 
-        // Process categories
+        // Process categories - similar logic as agencies
         if (decodedData.c && Array.isArray(decodedData.c)) {
           decodedData.c.forEach((code) => {
             if (!code) return;
@@ -515,7 +548,40 @@
               const categoryCode = code.slice(1).replace("*", "");
               const categoryTitle = mapping[categoryCode];
               if (categoryTitle) {
+                // Add the parent category title
                 selectedCategorySubcategory.push(categoryTitle);
+
+                // Find and check the parent checkbox
+                const parentCheckbox = document.querySelector(
+                  `input[data-filter-type="category"][data-category-title="${categoryTitle}"]`
+                );
+                if (parentCheckbox) {
+                  parentCheckbox.checked = true;
+
+                  // Also check all enabled child checkboxes if it's a parent selection
+                  const childrenId =
+                    parentCheckbox.getAttribute("data-children-id");
+                  if (childrenId && code.endsWith("*")) {
+                    const childrenContainer =
+                      document.getElementById(childrenId);
+                    if (childrenContainer) {
+                      const children = childrenContainer.querySelectorAll(
+                        'input[data-filter-type="sub-category"]:not(:disabled)'
+                      );
+                      children.forEach((child) => {
+                        child.checked = true;
+                        const subCategoryTitle = child.getAttribute(
+                          "data-subcategory-title"
+                        );
+                        if (subCategoryTitle) {
+                          selectedCategorySubcategory.push(
+                            `${categoryTitle} - ${subCategoryTitle}`
+                          );
+                        }
+                      });
+                    }
+                  }
+                }
               }
             }
           });
@@ -555,38 +621,11 @@
       checkbox.checked = false;
     });
 
-    // Helper function to expand sections
-    const expandSection = (sectionId) => {
-      const section = document.getElementById(sectionId);
-      if (section) {
-        section.hidden = false;
-        const button = document.querySelector(
-          `[data-content-id="${sectionId}"]`
-        );
-        if (button) {
-          button.setAttribute("aria-expanded", "true");
-          const icon = button.querySelector(".usa-icon use");
-          if (icon) {
-            icon.setAttribute(
-              "xlink:href",
-              "/assets/img/sprite.svg#expand_more"
-            );
-          }
-        }
-      }
-    };
-
-    // Helper function to check checkbox and expand its section
-    const checkAndExpand = (selector, sectionId) => {
-      expandSection(sectionId);
+    // Helper function to check checkbox WITHOUT expanding its section
+    const checkBox = (selector) => {
       const checkbox = document.querySelector(selector);
       if (checkbox) {
         checkbox.checked = true;
-        // If it's a parent checkbox with children, expand children section
-        const childrenId = checkbox.getAttribute("data-children-id");
-        if (childrenId) {
-          expandSection(childrenId);
-        }
       }
     };
 
@@ -594,27 +633,13 @@
     selectedAgencySubAgency.forEach((title) => {
       if (title.includes(" - ")) {
         const [parentTitle, subTitle] = title.split(" - ");
-        expandSection("agency-section");
 
-        // Find parent checkbox and expand its section
-        const parentSelector = `input[data-filter-type="agency"][data-agency-title="${parentTitle}"]`;
-        const parentCheckbox = document.querySelector(parentSelector);
-        if (parentCheckbox) {
-          const childrenId = parentCheckbox.getAttribute("data-children-id");
-          if (childrenId) {
-            expandSection(childrenId);
-            // Find and check child checkbox
-            const childSelector = `input[data-filter-type="sub-agency"][data-agency-title="${parentTitle}"][data-subagency-title="${subTitle}"]`;
-            const childCheckbox = document.querySelector(childSelector);
-            if (childCheckbox) {
-              childCheckbox.checked = true;
-            }
-          }
-        }
+        // Find and check child checkbox
+        const childSelector = `input[data-filter-type="sub-agency"][data-agency-title="${parentTitle}"][data-subagency-title="${subTitle}"]`;
+        checkBox(childSelector);
       } else {
-        checkAndExpand(
-          `input[data-filter-type="agency"][data-agency-title="${title}"]`,
-          "agency-section"
+        checkBox(
+          `input[data-filter-type="agency"][data-agency-title="${title}"]`
         );
       }
     });
@@ -623,42 +648,28 @@
     selectedCategorySubcategory.forEach((title) => {
       if (title.includes(" - ")) {
         const [parentTitle, subTitle] = title.split(" - ");
-        expandSection("categories-section");
 
-        const parentSelector = `input[data-filter-type="category"][data-category-title="${parentTitle}"]`;
-        const parentCheckbox = document.querySelector(parentSelector);
-        if (parentCheckbox) {
-          const childrenId = parentCheckbox.getAttribute("data-children-id");
-          if (childrenId) {
-            expandSection(childrenId);
-            const childSelector = `input[data-filter-type="sub-category"][data-category-title="${parentTitle}"][data-subcategory-title="${subTitle}"]`;
-            const childCheckbox = document.querySelector(childSelector);
-            if (childCheckbox) {
-              childCheckbox.checked = true;
-            }
-          }
-        }
+        // Find and check child checkbox
+        const childSelector = `input[data-filter-type="sub-category"][data-category-title="${parentTitle}"][data-subcategory-title="${subTitle}"]`;
+        checkBox(childSelector);
       } else {
-        checkAndExpand(
-          `input[data-filter-type="category"][data-category-title="${title}"]`,
-          "categories-section"
+        checkBox(
+          `input[data-filter-type="category"][data-category-title="${title}"]`
         );
       }
     });
 
     // Process assistance types
     selectedAssistanceTypes.forEach((title) => {
-      checkAndExpand(
-        `input[data-filter-type="assistance"][data-assistance-title="${title}"]`,
-        "program-type-section"
+      checkBox(
+        `input[data-filter-type="assistance"][data-assistance-title="${title}"]`
       );
     });
 
     // Process applicant types
     selectedApplicantTypes.forEach((title) => {
-      checkAndExpand(
-        `input[data-filter-type="applicant"][data-applicant-title="${title}"]`,
-        "eligible-applicants-section"
+      checkBox(
+        `input[data-filter-type="applicant"][data-applicant-title="${title}"]`
       );
     });
 
@@ -687,19 +698,49 @@
 
   // Function to format currency in billions
   function formatObligations(amount) {
-    const trillion = 1000000000000;
-    const billion = 1000000000;
+    const trillion = 1000000000000; // 1T
+    const billion = 1000000000; // 1B
+    const million = 1000000; // 1M
+    const thousand = 1000; // 1K
+    const hundred = 100; // 100
 
+    // Handle 0 case
+    if (amount === 0) {
+      return "$0";
+    }
+
+    // Handle trillions
     if (amount >= trillion) {
       return `$${(amount / trillion).toFixed(2)}T`;
-    } else {
-      return `$${Math.round(amount / billion)}B`;
     }
+
+    // Handle billions
+    if (amount >= billion) {
+      return `$${(amount / billion).toFixed(2)}B`;
+    }
+
+    // Handle millions
+    if (amount >= million) {
+      return `$${(amount / million).toFixed(2)}M`;
+    }
+
+    // Handle thousands
+    if (amount >= thousand) {
+      return `$${(amount / thousand).toFixed(2)}K`;
+    }
+
+    // Handle hundreds and smaller
+    if (amount >= hundred) {
+      return `$${amount.toFixed(2)}`;
+    }
+
+    // Handle small numbers (less than 100)
+    return `$${amount.toFixed(2)}`;
   }
 
   function updatePagination(currentPage, totalPages) {
     // Update the info text
-    const start = (currentPage - 1) * pageSize + 1;
+    const start = totalCount === 0 ? 0 : (currentPage - 1) * pageSize + 1;
     const end = Math.min(currentPage * pageSize, totalCount);
 
     document.getElementById("results-start").textContent =
@@ -708,8 +749,116 @@
     document.getElementById("results-total").textContent =
       totalCount.toLocaleString();
 
+    // If there are no results, hide or disable pagination
+    const paginationList = document.querySelector(".usa-pagination__list");
+    if (totalCount === 0) {
+      if (paginationList) {
+        paginationList.style.display = "none";
+      }
+      return;
+    } else {
+      if (paginationList) {
+        paginationList.style.display = "";
+      }
+    }
+
     // Generate the page numbers
     generatePaginationNumbers(currentPage, totalPages);
+  }
+
+  // Update generatePaginationNumbers to also handle zero results
+  function generatePaginationNumbers(currentPage, totalPages) {
+    const paginationList = document.querySelector(".usa-pagination__list");
+    if (!paginationList || totalPages === 0) return;
+
+    const prevButton = paginationList.querySelector(
+      ".usa-pagination__arrow:first-child"
+    );
+    const nextButton = paginationList.querySelector(
+      ".usa-pagination__arrow:last-child"
+    );
+
+    // Remove existing page numbers
+    const existingNumbers = paginationList.querySelectorAll(
+      ".usa-pagination__page-no, .usa-pagination__overflow"
+    );
+    existingNumbers.forEach((item) => item.remove());
+
+    // If there are no pages, disable both navigation buttons and return
+    if (totalPages === 0) {
+      if (prevButton) {
+        const prevLink = prevButton.querySelector("a");
+        prevLink.classList.add("usa-pagination__link--disabled");
+        prevLink.setAttribute("aria-disabled", "true");
+      }
+      if (nextButton) {
+        const nextLink = nextButton.querySelector("a");
+        nextLink.classList.add("usa-pagination__link--disabled");
+        nextLink.setAttribute("aria-disabled", "true");
+      }
+      return;
+    }
+
+    let pages = [];
+
+    pages.push(1);
+    let rangeStart = Math.max(2, currentPage - 1);
+    let rangeEnd = Math.min(totalPages - 1, currentPage + 1);
+
+    if (rangeStart > 2) pages.push("...");
+
+    for (let i = rangeStart; i <= rangeEnd; i++) {
+      pages.push(i);
+    }
+
+    if (rangeEnd < totalPages - 1) pages.push("...");
+    if (totalPages > 1) pages.push(totalPages);
+
+    // Insert page numbers into DOM
+    pages.forEach((page) => {
+      const li = document.createElement("li");
+
+      if (page === "...") {
+        li.className = "usa-pagination__item usa-pagination__overflow";
+        li.setAttribute("aria-label", "ellipsis indicating non-visible pages");
+        li.innerHTML = "<span>…</span>";
+      } else {
+        li.className = "usa-pagination__item usa-pagination__page-no";
+        const a = document.createElement("a");
+        a.href = "javascript:void(0);";
+        a.className =
+          "usa-pagination__button" +
+          (page === currentPage ? " usa-current" : "");
+        a.setAttribute("aria-label", `Page ${page}`);
+        if (page === currentPage) {
+          a.setAttribute("aria-current", "page");
+        }
+        a.textContent = page;
+        li.appendChild(a);
+      }
+
+      paginationList.insertBefore(li, nextButton);
+    });
+
+    // Update disabled states for navigation buttons
+    const prevLink = prevButton.querySelector("a");
+    const nextLink = nextButton.querySelector("a");
+
+    if (currentPage === 1) {
+      prevLink.classList.add("usa-pagination__link--disabled");
+      prevLink.setAttribute("aria-disabled", "true");
+    } else {
+      prevLink.classList.remove("usa-pagination__link--disabled");
+      prevLink.removeAttribute("aria-disabled");
+    }
+
+    if (currentPage === totalPages) {
+      nextLink.classList.add("usa-pagination__link--disabled");
+      nextLink.setAttribute("aria-disabled", "true");
+    } else {
+      nextLink.classList.remove("usa-pagination__link--disabled");
+      nextLink.removeAttribute("aria-disabled");
+    }
   }
 
   function updateProgramCounts() {
@@ -874,14 +1023,22 @@
 
       clone.querySelector(".program-title").textContent = program.title;
       clone.querySelector(".program-title").href = program.permalink || "#";
-      clone.querySelector(".program-popular-name").textContent =
-        program.popularName || "";
+
+      const popularNameDiv = clone.querySelector('[data-popular-name-container]');
+        if (!program.popularName || program.popularName.trim() === '') {
+            popularNameDiv.remove();
+        } else {
+            clone.querySelector(".program-popular-name").textContent = program.popularName;
+        }
+
+
       clone.querySelector(".program-agency").textContent =
         program.agency?.title || "";
       clone.querySelector(
         ".program-obligations"
-      ).textContent = `${formatObligations(program.obligations)} in FY ${new Date().getFullYear() - 1
-        } obligations`;
+      ).textContent = `${formatObligations(program.obligations)} in FY ${
+        new Date().getFullYear() - 1
+      } obligations`;
 
       const objectivesEl = clone.querySelector(".program-objectives");
       const readMoreBtn = clone.querySelector(".read-more-btn");
@@ -907,29 +1064,23 @@
   }
 
   function updateCheckboxDisabledState(checkbox, isDisabled) {
-    checkbox.disabled = isDisabled;
     const checkboxContainer = checkbox.closest(".usa-checkbox");
     if (checkboxContainer) {
       if (isDisabled) {
-        checkboxContainer.classList.add("disabled");
+        checkboxContainer.classList.add("visually-inactive");
       } else {
-        checkboxContainer.classList.remove("disabled");
+        checkboxContainer.classList.remove("visually-inactive");
       }
     }
   }
 
   function updateFiltersFromFacets(facets) {
+    // Remove the count display helper since we don't want to show counts
     const addCountToLabel = (label, count) => {
+      // Remove any existing count spans
       const existingCount = label.querySelector(".count");
       if (existingCount) {
         existingCount.remove();
-      }
-
-      if (count !== undefined) {
-        const countSpan = document.createElement("span");
-        countSpan.className = "count text-base margin-left-1";
-        countSpan.textContent = `(${count})`;
-        label.appendChild(countSpan);
       }
     };
 
@@ -960,46 +1111,20 @@
         const agencyTitle = checkbox.getAttribute("data-agency-title");
         const label = checkbox.closest(".usa-checkbox").querySelector("label");
         const childrenId = checkbox.getAttribute("data-children-id");
-        const childrenContainer = childrenId
-          ? document.getElementById(childrenId)
-          : null;
 
         if (agencyTitle === "Other agencies") {
-          // For "Other agencies", sum up agencies not in CFO list
           let otherAgenciesTotal = 0;
           for (const [facetAgencyTitle, agencyData] of agencyFacets.entries()) {
             if (!cfoAgencyTitles.includes(facetAgencyTitle)) {
               otherAgenciesTotal += agencyData.count;
             }
           }
-
           updateCheckboxDisabledState(checkbox, otherAgenciesTotal === 0);
-          addCountToLabel(label, otherAgenciesTotal);
+          addCountToLabel(label);
         } else {
           const agencyData = agencyFacets.get(agencyTitle);
-          if (agencyData) {
-            const totalCount = agencyData.count;
-            updateCheckboxDisabledState(checkbox, false);
-            addCountToLabel(label, totalCount);
-          } else {
-            updateCheckboxDisabledState(checkbox, true);
-            checkbox.checked = false;
-            addCountToLabel(label, 0);
-          }
-
-          // Handle children visibility and state
-          if (checkbox.disabled && childrenContainer) {
-            childrenContainer
-              .querySelectorAll('input[type="checkbox"]')
-              .forEach((childCheckbox) => {
-                childCheckbox.checked = false;
-                updateCheckboxDisabledState(childCheckbox, true);
-                const childLabel = childCheckbox
-                  .closest(".usa-checkbox")
-                  .querySelector("label");
-                addCountToLabel(childLabel, 0);
-              });
-          }
+          updateCheckboxDisabledState(checkbox, !agencyData);
+          addCountToLabel(label);
         }
       });
 
@@ -1011,31 +1136,15 @@
         const subAgencyTitle = checkbox.getAttribute("data-subagency-title");
         const label = checkbox.closest(".usa-checkbox").querySelector("label");
 
-        // Skip if parent is disabled
-        const parentCheckbox = document.querySelector(
-          `input[data-filter-type="agency"][data-agency-title="${agencyTitle}"]`
-        );
-        if (parentCheckbox && parentCheckbox.disabled) {
-          updateCheckboxDisabledState(checkbox, true);
-          checkbox.checked = false;
-          addCountToLabel(label, 0);
-          return;
-        }
-
         if (agencyTitle === "Other agencies") {
-          // For sub-agencies under "Other", look for this agency in facets
           const agencyData = agencyFacets.get(subAgencyTitle);
           const count = agencyData?.count || 0;
-
           updateCheckboxDisabledState(checkbox, count === 0);
-          addCountToLabel(label, count);
+          addCountToLabel(label);
         } else if (subAgencyTitle === "Unspecified") {
-          // For "Unspecified" sub-agencies
           const agencyData = agencyFacets.get(agencyTitle);
           if (agencyData) {
             let unspecifiedCount = agencyData.count;
-
-            // Only subtract subagency counts that don't match the parent agency
             for (const [
               subagencyName,
               count,
@@ -1044,27 +1153,17 @@
                 unspecifiedCount -= count;
               }
             }
-
             updateCheckboxDisabledState(checkbox, unspecifiedCount <= 0);
-            addCountToLabel(label, Math.max(0, unspecifiedCount));
+            addCountToLabel(label);
           } else {
             updateCheckboxDisabledState(checkbox, true);
-            checkbox.checked = false;
-            addCountToLabel(label, 0);
+            addCountToLabel(label);
           }
         } else {
-          // Regular sub-agency handling
           const agencyData = agencyFacets.get(agencyTitle);
           const subAgencyCount = agencyData?.subagencies.get(subAgencyTitle);
-
-          if (subAgencyCount !== undefined) {
-            updateCheckboxDisabledState(checkbox, false);
-            addCountToLabel(label, subAgencyCount);
-          } else {
-            updateCheckboxDisabledState(checkbox, true);
-            checkbox.checked = false;
-            addCountToLabel(label, 0);
-          }
+          updateCheckboxDisabledState(checkbox, subAgencyCount === undefined);
+          addCountToLabel(label);
         }
       });
 
@@ -1088,15 +1187,8 @@
         const categoryTitle = checkbox.getAttribute("data-category-title");
         const label = checkbox.closest(".usa-checkbox").querySelector("label");
         const categoryData = categoryFacets.get(categoryTitle);
-
-        if (categoryData) {
-          updateCheckboxDisabledState(checkbox, false);
-          addCountToLabel(label, categoryData.count);
-        } else {
-          updateCheckboxDisabledState(checkbox, true);
-          checkbox.checked = false;
-          addCountToLabel(label, 0);
-        }
+        updateCheckboxDisabledState(checkbox, !categoryData);
+        addCountToLabel(label);
       });
 
     // Handle subcategories
@@ -1112,15 +1204,8 @@
         const categoryData = categoryFacets.get(categoryTitle);
         const subCategoryCount =
           categoryData?.subcategories.get(subCategoryTitle);
-
-        if (subCategoryCount !== undefined) {
-          updateCheckboxDisabledState(checkbox, false);
-          addCountToLabel(label, subCategoryCount);
-        } else {
-          updateCheckboxDisabledState(checkbox, true);
-          checkbox.checked = false;
-          addCountToLabel(label, 0);
-        }
+        updateCheckboxDisabledState(checkbox, subCategoryCount === undefined);
+        addCountToLabel(label);
       });
 
     // Process Assistance Types
@@ -1133,15 +1218,8 @@
         const assistanceTitle = checkbox.getAttribute("data-assistance-title");
         const label = checkbox.closest(".usa-checkbox").querySelector("label");
         const count = assistanceFacets.get(assistanceTitle);
-
-        if (count !== undefined) {
-          updateCheckboxDisabledState(checkbox, false);
-          addCountToLabel(label, count);
-        } else {
-          updateCheckboxDisabledState(checkbox, true);
-          checkbox.checked = false;
-          addCountToLabel(label, 0);
-        }
+        updateCheckboxDisabledState(checkbox, count === undefined);
+        addCountToLabel(label);
       });
 
     // Process Applicant Types
@@ -1154,15 +1232,8 @@
         const applicantTitle = checkbox.getAttribute("data-applicant-title");
         const label = checkbox.closest(".usa-checkbox").querySelector("label");
         const count = applicantFacets.get(applicantTitle);
-
-        if (count !== undefined) {
-          updateCheckboxDisabledState(checkbox, false);
-          addCountToLabel(label, count);
-        } else {
-          updateCheckboxDisabledState(checkbox, true);
-          checkbox.checked = false;
-          addCountToLabel(label, 0);
-        }
+        updateCheckboxDisabledState(checkbox, count === undefined);
+        addCountToLabel(label);
       });
   }
 
@@ -1218,9 +1289,7 @@
     .getElementsByTagName("input");
   for (let input of filterInputs) {
     input.addEventListener("change", (event) => {
-      // handleFilterChange(event);
-      // currentPage = 1;
-      // fetchProgramsData();
+      input.addEventListener("change", handleFilterChange);
     });
   }
 
@@ -1423,9 +1492,15 @@
       }
     }
 
+    currentPage = 1;
+
     updateClearFilterButton();
     // Always sync checkbox states after changes
     syncParentCheckboxStates();
+
+    // Trigger search with updated filters
+    encodeFiltersToUrl();
+    fetchProgramsData();
   }
 
   function initializeToggles() {
@@ -1656,17 +1731,18 @@
 
     // Handle browser navigation
     window.addEventListener("popstate", async function () {
-      console.log("Navigation occurred");
+      captureInitialState();
       decodeFiltersFromUrl();
       await fetchProgramsData();
       updateClearFilterButton();
     });
 
-    // // Initial load
+    // Initial load
     try {
+      // Decode filters and fetch data
+      captureInitialState();
       decodeFiltersFromUrl();
       await fetchProgramsData();
-      captureInitialState();
       updateClearFilterButton();
     } catch (error) {
       console.error("Error during initialization:", error);
